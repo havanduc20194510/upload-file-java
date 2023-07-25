@@ -6,8 +6,14 @@
 </head>
 <body>
 <form th:action="@{'/upload-file-handler'}" method="post" enctype="multipart/form-data">
-    <input type="file" name="img"/>
+    <input type="file" name="img" multiple="multiple"/>
     <input type="submit" value="Upload"/>
 </form>
+
+<!-- Display the uploaded images -->
+<div th:each="image : ${images}">
+    <p>${image}</p>
+    <img th:src="@{/display-image/{id}(id=${image.id})}" alt="Uploaded Image" style="max-width: 200px;"/>
+</div>
 </body>
 </html>

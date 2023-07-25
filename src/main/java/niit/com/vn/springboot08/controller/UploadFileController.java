@@ -1,22 +1,27 @@
 package niit.com.vn.springboot08.controller;
 
+import niit.com.vn.springboot08.entity.Image;
+import niit.com.vn.springboot08.repository.ImageRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.util.Calendar;
+import java.util.List;
 
 @Controller("uploadFileController")
 public class UploadFileController {
     @Value("${UPLOAD_DIR}")
     public String uploadDir;
+
+    @Autowired
+    private ImageRepository imageRepository;
 
     @GetMapping("/upload-file")
     public String uploadFile() {
@@ -38,16 +43,32 @@ public class UploadFileController {
                 //tạo thư mục mới
                 folder.mkdir();
             }
-            FileOutputStream fileOutputStream = new FileOutputStream(uploadDir + newDir + "/" + System.currentTimeMillis()+file.getOriginalFilename());
+            String fileName = System.currentTimeMillis() + file.getOriginalFilename();
+            FileOutputStream fileOutputStream = new FileOutputStream(uploadDir + newDir + File.separator + fileName);
             fileOutputStream.write(file.getBytes());
+
+            // Save the image information to the database
+            Image image = new Image();
+            image.setFileName(fileName);
+            image.setImageData(file.getBytes());
+            imageRepository.save(image);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return "redirect:upload-file";
+        List<Image> images = imageRepository.findAll(); // Fetch all images from the database
+        return "upload-file";
     }
 
-/*    @GetMapping("/file")
-    public String serveFile() {
-        BufferedReader bufferedReader = new BufferedReader();
-    }*/
+    // Rest of the controller code...
+
+    @GetMapping("/display-image/{id}")
+    public ResponseEntity<byte[]> displayImage(@PathVariable Long id) {
+        // Fetch the image data from the database
+        Image image = imageRepository.findById(id).orElse(null);
+        if (image != null) {
+            return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(image.getImageData());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
 }
