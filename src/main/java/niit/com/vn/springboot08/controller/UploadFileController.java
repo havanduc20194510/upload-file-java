@@ -29,7 +29,7 @@ public class UploadFileController {
     }
 
     @PostMapping("/upload-file-handler")
-    public String uploadFileHandler(@RequestParam("img") MultipartFile file) {
+    public String uploadFileHandler(@RequestParam("img") MultipartFile file, Model model) {
         try {
             //get current month
             //get current year
@@ -56,6 +56,7 @@ public class UploadFileController {
             e.printStackTrace();
         }
         List<Image> images = imageRepository.findAll(); // Fetch all images from the database
+        model.addAttribute("images", images);
         return "upload-file";
     }
 
